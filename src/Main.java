@@ -2,6 +2,7 @@
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -13,7 +14,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.*;
 
 
-public class Main {
+public class Main{
 
 	/**
 	 * @param args
@@ -21,22 +22,32 @@ public class Main {
 	 * @throws ClassNotFoundException 
 	 * @throws InterruptedException 
 	 */
+	static enum Counter{
+		CONVERGED
+	}
+	
+	public static final String CENTROIDS = "centroids";
+	
 	public static void main(String[] args) throws IOException, InterruptedException, ClassNotFoundException {
 		// TODO Auto-generated method stub
-		int iteration = 0;
-		
-		//counter from the previous running import job
-		Configuration conf = new Configuration();
-		Job job = new Job(conf);
-		long counter = job.getCounters().findCounter(ReduceClass.Counter.CONVERGED).getValue();
-		
-		iteration ++;
-		while(counter > 0){
-			 conf = new Configuration();
-			conf.set("recursion.iter",iteration+" ");
-			 job = new Job(conf);
+		int iteration = 1;
+		long changes = 0;
+		Path dataPath = new Path("data");
+
+		while(true){
+			Configuration conf = new Configuration();
+			conf.setInt("number of clusters", 8);
+			conf.setFloat("tolerance", 1e-6F);
+			
+			Path nextIter = new Path(String.format("centrods_%s", iteration));
+			Path prevIter = new Path(String.format("centroids_%s", iteration - 1));
+			Job job = new Job(conf);
+		    job.setJobName("Kmeans " + iteration);
+			job.setJarByClass(Main.class);
 			
 			job.setJobName("KMeans "+ iteration);
+			
+			//Set Mapper, Combiner, and Reducer
 			job.setMapperClass(MapClass.class);
 			job.setReducerClass(ReduceClass.class);
 			job.setMapOutputKeyClass(Text.class);
@@ -46,18 +57,18 @@ public class Main {
 			job.setOutputKeyClass(Text.class);
 			job.setOutputValueClass(Text.class);
 			
-			Path oldCentersFile = new Path("files/kmeans/iter_" + (iteration-1) + "/");
-			Path newCentersFile = new Path("files/kmeans/iter_" + iteration+"/");
-			DistributedCache.addCacheFile(oldCentersFile.toUri(),conf);
-			FileSystem fs1 = FileSystem.get(oldCentersFile.toUri(), conf);
-			FileSystem fs2 = FileSystem.get(newCentersFile.toUri(),conf);
-			FileInputFormat.addInputPath(job, new Path("files/kmeans/iter_" + (iteration-1) + "/"));
-			FileOutputFormat.setOutputPath(job, new Path("files/kmeans/iter_" + iteration));
-					
+			//Set input/output paths
+			FileInputFormat.addInputPath(job, dataPath);
+			FileOutputFormat.setOutputPath(job, nextIter);
+			
+			job.setNumReduceTasks(1);
 			job.waitForCompletion(true);
 			iteration++;
-			counter = job.getCounters().findCounter(ReduceClass.Counter.CONVERGED).getValue();
-			
+			changes = job.getCounters().findCounter(Main.Counter.CONVERGED).getValue();
+			job.getCounters().findCounter(Main.Counter.CONVERGED).setValue(0);
+			if(changes<=0){
+				break;
+			}		
 		}
 	}
 

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -21,10 +22,10 @@ public class MapClass extends Mapper<LongWritable,Text,Text,Text>{
 	 * @throws IOException 
 	 */
 	public void setup(Context context) throws IOException {
-		Path[] caches = DistributedCache.getLocalCacheFiles(context.getConfiguration());
-		BufferedReader br = new BufferedReader(new FileReader(caches[0].toString()));
+		Configuration conf = context.getConfiguration();
+		Path centroidsPath = new Path(conf.get(Main.CENTROIDS));
+		BufferedReader br = new BufferedReader(new FileReader(centroidsPath.toString()));
 		String line = null;
-		
 		 centers = new HashMap<Integer,ArrayList<Double>>();
 		while((line = br.readLine())!=null){
 			String [] temp = line.split(",");
@@ -34,12 +35,12 @@ public class MapClass extends Mapper<LongWritable,Text,Text,Text>{
 			}
 			centers.put(Integer.parseInt(temp[0]), axis);
 		}
+		br.close();
 	}
 	
 	public static int CalculateDis(String [] dimensions, HashMap<Integer,ArrayList<Double>> centers){
 		double minDistance = Double.MAX_VALUE;
 		int minCenter = 1;
-		ArrayList<Double> instance = new ArrayList<Double>();
 		for(Integer i : centers.keySet()){
 			double distance = 0.0;
 			for(int j =2; j<dimensions.length;j++){
