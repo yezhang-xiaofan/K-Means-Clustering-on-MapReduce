@@ -24,9 +24,8 @@ public class Main {
 	public static void main(String[] args) throws IOException, InterruptedException, ClassNotFoundException {
 		// TODO Auto-generated method stub
 		int iteration = 0;
-		//counter from the previous running import job
 		
-	
+		//counter from the previous running import job
 		Configuration conf = new Configuration();
 		Job job = new Job(conf);
 		long counter = job.getCounters().findCounter(ReduceClass.Counter.CONVERGED).getValue();

@@ -50,20 +50,21 @@ public class MapClass extends Mapper<LongWritable,Text,Text,Text>{
 				minCenter = i;
 				
 			}
-		}
-		
+		}	
 		return minCenter;
 	}
+	
+	// 'value' is one instance. The first string is the case id which should be ignored. 
 	public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException{
-			String [] dimensions = value.toString().split(",");
+			
+		    String [] dimensions = value.toString().split(",");
 			int minCenter = CalculateDis (dimensions, centers); 
-			ArrayList<Double> centroids = centers.get(minCenter);
 			StringBuilder str = new StringBuilder();
-			str.append(minCenter+",");
-			for(int i = 0; i<centroids.size();i++){
-				str.append(centroids.get(i)+",");
+			for( int i = 1; i<dimensions.length;i++){
+				str.append(dimensions[i]);
+				str.append(',');
 			}
-			context.write(new Text(str.toString()), new Text(Integer.toString(minCenter)));
+			context.write(new Text(Integer.toString(minCenter)),new Text(str.toString()));
 	}
 
 }
