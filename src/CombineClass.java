@@ -16,18 +16,6 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 public class CombineClass extends Reducer<Text, Text, Text, Text>{
 	
-	 /*
-	public void setup(Context context) throws IOException{
-		Path[] caches = DistributedCache.getLocalCacheFiles(context.getConfiguration());
-		BufferedReader br = new BufferedReader(new FileReader(caches[0].toString()));
-		String line;
-		Map<Integer,ArrayList<String>> oldcentroids = new HashMap<Integer,ArrayList<String>>();
-		while((line=br.readLine())!=null){
-			String [] temp = line.split(",");		
-		}
-	}
-	*/
-	
 	//arg0 is the cluster id, arg1 is data instance
 	protected void reduce(Text arg0, Iterable<Text>arg1, Context context)  throws IOException, InterruptedException{
 		//centroids stores the 'cluster id, number of instances' pair

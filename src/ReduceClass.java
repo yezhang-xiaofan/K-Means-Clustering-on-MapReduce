@@ -17,9 +17,6 @@ import org.apache.hadoop.mapreduce.Mapper.Context;
 
 public class ReduceClass extends Reducer<Text,Text,Text,Text>{
 
-	/**
-	 * @param args
-	 */
 	public static int num_feature;
 	 HashMap<Integer,ArrayList<Double>> centers = new HashMap<Integer,ArrayList<Double>>();
 	public void setup(Context context) throws IOException {		
